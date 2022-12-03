@@ -9,9 +9,9 @@ public class Corredor extends Thread {
 		this.corredor = corredor;
 
 		if (corredor.equals("Tortuga")) {
-			velocidad = 1000;
+			velocidad = 5000; // milisegundos
 		} else if (corredor.equals("Conejo")) {
-			velocidad = 500;
+			velocidad = 1000; // milisegundos
 		} else {
 			System.out.println("error en el corredor");
 		}
@@ -31,6 +31,23 @@ public class Corredor extends Thread {
 		}
 
 		System.out.println(corredor + " finaliza la carrera");
+
 	} // fin run
+
+	public String getCorredor() {
+		return corredor;
+	}
+
+	public void setCorredor(String corredor) {
+		this.corredor = corredor;
+	}
+
+	public int getVelocidad() {
+		return velocidad;
+	}
+
+	public void setVelocidad(int velocidad) {
+		this.velocidad = velocidad;
+	}
 
 } // fin corredor
