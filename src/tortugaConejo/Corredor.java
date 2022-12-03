@@ -9,9 +9,9 @@ public class Corredor extends Thread {
 		this.corredor = corredor;
 
 		if (corredor.equals("Tortuga")) {
-			velocidad = 500; // milisegundos
+			velocidad = 5000; // milisegundos
 		} else if (corredor.equals("Conejo")) {
-			velocidad = 100; // milisegundos
+			velocidad = 1000; // milisegundos
 		} else {
 			System.out.println("error en el corredor");
 		}
