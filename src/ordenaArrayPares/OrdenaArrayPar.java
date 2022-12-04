@@ -23,20 +23,30 @@ public class OrdenaArrayPar {
 		for (int i = 0; i < cadena.length; i++) {
 			cadena[i] = (int) (Math.random() * 100 + 1);
 			System.out.print("[" + cadena[i] + "] ");
+			if (((i + 1) % 10) == 0) { // visualizo 10 columnas en cada fila
+				System.out.println();
+			}
+		}
+
+		System.out.println();
+
+		// lo recorro y el q no sea par lo pongo a -1
+		for (int i = 0; i < cadena.length; i++) {
+			if (cadena[i] % 2 != 0) {
+				cadena[i] = -1;
+			}
+			System.out.print("[" + cadena[i] + "] ");
 			if (((i + 1) % 10) == 0) {
 				System.out.println();
 			}
 		}
 
-		// tantos trozos como procesadores
+		// divido array en tantos trozos como procesadores tengo.
+		// la longitud de cada trozo es el tam total entre el num proc.
 		int longTrozo = cadena.length / numProcesadores;
-		System.out.println(
-				"numero de trozos: " + numProcesadores + ", longitud de cada trozo menos el ultimo: " + longTrozo);
 
-		for (int i = 0; i < (numProcesadores - 1); i++) { // genero tantos arrays como procesadores menos el último.
-			String subArray = "subArray".concat(String.valueOf(i));
-			int[] subArray = new int[longTrozo];
-		}
+		System.out.println("num trozos: " + numProcesadores + ", longitud de cada trozo menos el ultimo: " + longTrozo);
+		System.out.println("long último trozo: " + (longTrozo + (cadena.length % numProcesadores)));
 
 	} // fin main
 
