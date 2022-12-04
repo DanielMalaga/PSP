@@ -8,11 +8,10 @@ import java.util.ArrayList;
 public class OrdenaArrayPar extends Thread {
 
 	// atributos comunes a todas las instancias de la clase
-	private static int tamanoArray = 100;
-	private static int[] cadena = new int[tamanoArray];
+	private static int tamanoArray; // no viene determinado de entrada
+	private static int[] cadena; // tampoco viene determinado hasta no saber el tamaño del Array
 	private static ArrayList<Integer> cadenaPares = new ArrayList<Integer>();
-	private static Object bloqueo = new Object();
-	private static int totalPares = 0;
+	private static Object bloqueo = new Object(); // objeto usado para sincronizar el acceso al ArrayList
 
 	// atributos particulares de cada instancia.
 	private int inicio;
@@ -32,7 +31,6 @@ public class OrdenaArrayPar extends Thread {
 			if (cadena[i] % 2 == 0) { // es par
 				synchronized (bloqueo) {
 					cadenaPares.add(cadena[i]);
-					totalPares++;
 				}
 
 			}
@@ -42,58 +40,85 @@ public class OrdenaArrayPar extends Thread {
 
 	public static void main(String[] args) {
 
-		// para saber de cuantos procesadores se dispone
-		Runtime ordenador = Runtime.getRuntime();
-		int numProcesadores = ordenador.availableProcessors();
-		// System.out.println("Este ordenador tiene: " + numProcesadores + "
-		// procesadores.");
+		OrdenaArrayPar.tamanoArray = 80000;
+		OrdenaArrayPar.cadena = new int[tamanoArray];
 
-		// genero el array y lo relleno de int [1..100] longitud: 10 uds.
+		// genero el array y lo relleno de int [1..100] longitud: tamanoArray uds.
 		int totalParesEnCadena = 0;
 		for (int i = 0; i < cadena.length; i++) {
 			cadena[i] = (int) (Math.random() * 100 + 1);
-			System.out.print("[" + cadena[i] + "] ");
+			//System.out.print(cadena[i] + " ");
 			if (cadena[i] % 2 == 0) {
-				totalParesEnCadena++;
+				totalParesEnCadena++; // para comprobar el resultado sin indeterminismo.
 			}
-			if (((i + 1) % 30) == 0) { // visualizo hasta 30 columnas en cada fila
-				System.out.println();
-			}
+			//if (((i + 1) % 30) == 0) { // visualizo hasta 30 columnas en cada fila
+			//	System.out.println();
+			//}
 		}
 		System.out.println();
-		System.out.println("el array tiene: [" + totalParesEnCadena + "] numeros pares");
+		System.out.println("el array de entrada tiene: [" + totalParesEnCadena + "] numeros pares");
 		System.out.println();
-		System.out.println("** Ahora el arrayList **");
 
-		OrdenaArrayPar trozo1 = new OrdenaArrayPar(0, 26);
-		OrdenaArrayPar trozo2 = new OrdenaArrayPar(26, 51);
-		OrdenaArrayPar trozo3 = new OrdenaArrayPar(51, 76);
-		OrdenaArrayPar trozo4 = new OrdenaArrayPar(76, 100);
-		trozo1.start();
-		trozo2.start();
-		trozo3.start();
-		trozo4.start();
+		// para saber de cuantos procesadores se dispone
+		Runtime ordenador = Runtime.getRuntime();
+		int numProcesadores = ordenador.availableProcessors();
 
-		// espero a q terminen
-		try {
-			trozo1.join();
-			trozo2.join();
-			trozo3.join();
-			trozo4.join();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+		// genero un array de OrdenaArrayPar de la clase de tamaño igual al núm de
+		// procesadores.
+
+		// si el array no es mayor que el núm de procesadores ni lo divido, hago un solo
+		// hilo.
+		if (cadena.length < numProcesadores) {
+			OrdenaArrayPar trozoUnico = new OrdenaArrayPar(0, cadena.length);
+			trozoUnico.start();
+			try { // espero a q termine
+				trozoUnico.join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		} else { // al menos tengo igual num elem q de procesadores.
+
+			// creo un array de objetos cuyo tamaño es igual al núm procesadores.
+			OrdenaArrayPar[] grupoParaOrdenar = new OrdenaArrayPar[numProcesadores];
+			int longTrozo = cadena.length / numProcesadores;
+
+			// instancio todos los elementos del array dividiendo el array de entrada entre
+			// los procesadores
+			for (int i = 0; i < grupoParaOrdenar.length; i++) {
+				if (i == (grupoParaOrdenar.length - 1)) { // el último hilo procesa hasta el final
+					grupoParaOrdenar[i] = new OrdenaArrayPar((i * longTrozo), ((i * longTrozo) + longTrozo + (cadena.length % numProcesadores)));
+				} else { // no es el último hilo
+					grupoParaOrdenar[i] = new OrdenaArrayPar((i * longTrozo), ((i * longTrozo) + longTrozo));
+				}
+			}
+			// ejecuto los hilos
+			for (int i = 0; i < grupoParaOrdenar.length; i++) {
+				grupoParaOrdenar[i].start();
+			}
+
+			// espero a q terminen
+			try {
+				for (int i = 0; i < grupoParaOrdenar.length; i++) {
+					grupoParaOrdenar[i].join();
+				}
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 
 		// ordenamos el arrayList
-		//cadenaPares.sort(int);
-		System.out.println();
-		System.out.println("el array tiene: [" + totalPares + "] numeros pares");
-		// muestro el resultado del ArrayList
-		cadenaPares.forEach(number -> System.out.print("[" + number + "] "));
-		System.out.println();
-		System.out.println("el ArrayList tiene: [" + cadenaPares.size() + "] numeros q son pares");
-		
+		cadenaPares.sort((o1, o2) -> o1.compareTo(o2)); // de menor a mayor
 
+		// ahora pasamos el ArrayList a Array
+		int[] cadenaResultado = new int[cadenaPares.size()];
+		for (int i = 0; i < cadenaResultado.length; i++) {
+			cadenaResultado[i] = cadenaPares.get(i);
+			//System.out.print((cadenaResultado[i] + " "));
+		}
+
+		// listamos el array resultado con los números pares ordenados de menor a mayor.
+		System.out.println();
+		System.out.println("el array de salida tiene: [" + cadenaResultado.length + "] numeros pares");
 
 	} // fin main
 
